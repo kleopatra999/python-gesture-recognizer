@@ -33,8 +33,10 @@ def handle_bundle_start( timestamp, bundle_box ):
         start   = set(),
     ))
 
+import sys
 def handle_bundle_end( bundle_box ):
     print( "bundle end" )
+    sys.stdout.flush()
 
 def handle_tuio_2Dcur( path, args, typespec, address, bundle_box ):
     # there are profiles redefining methods
