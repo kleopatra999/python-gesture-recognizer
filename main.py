@@ -21,36 +21,19 @@ def init():
 
 
 
+import math
 def handle_bundle_start( timestamp, bundle_box ):
+    # I can't handle the fractional part of the OSC timetag
+    timestamp = lo.time()
     print( "bundle start", timestamp )
     bundle_box( Duct(
         fseq    = None,
         source  = None,
         timestamp = timestamp,
-        alive   = list(),
-        sets    = list(),
+        start   = set(),
     ))
 
 def handle_bundle_end( bundle_box ):
-    bundle = bundle_box()
-    alive = set( *bundle.alive )
-    start = alive - tuio.objects
-    stay  = alive & tuio.objects
-    end   = tuio.objects - alive
-    tuio.objects = alive
-    sets  = bundle.sets
-    for sid in end:
-        print( "  end", sid )
-    for sid in start:
-        for aset in sets:
-            if aset[0] == sid:
-                print( "  start", *aset )
-                break
-    for sid in stay:
-        for aset in sets:
-            if aset[0] == sid:
-                print( "  move", *aset )
-                break
     print( "bundle end" )
 
 def handle_tuio_2Dcur( path, args, typespec, address, bundle_box ):
@@ -60,16 +43,48 @@ def handle_tuio_2Dcur( path, args, typespec, address, bundle_box ):
     # see also http://tuio.org/?specification
     bundle = bundle_box()
     method = args[0]
-    if False:
-        pass
-    elif method == "set" and typespec == 'sifffff':
-        bundle.sets.append( args[1:] )
+    if method == "set" and typespec == 'sifffff':
+        sid, x, y, X, Y, m = args[1:]
+        if sid in bundle.start:
+            print( "  start", sid )
+            handle_touch_start( sid, bundle.timestamp, x, y )
+        elif sid in tuio.objects:
+            print( "  move", sid )
+            handle_touch_move( sid, bundle.timestamp, x, y )
+        else:
+            print( "  set for dead", sid )
     elif method == "alive":
-        bundle.alive.append( args[1:] )
+        alive = set( args[1:] )
+        start = alive - tuio.objects
+        end   = tuio.objects - alive
+        for sid in end:
+            print( "  end", sid )
+            tuio.objects.remove( sid )
+            handle_touch_end( sid, bundle.timestamp )
+        for sid in start:
+            print( "  alive start", sid )
+            bundle.start.add( sid )
+            tuio.objects.add( sid )
     elif method == "fseq":
+        print( "  fseq", args[1] )
         bundle.fseq = args[1]
     elif method == "source":
+        print( "  source", args[1] )
         bundle.source = args[1]
+
+
+
+import recognition
+recognizers = recognition.Recognizers()
+
+def handle_touch_start( sid, time, x, y ):
+    recognizers.touch_start( sid, time, x, y )
+
+def handle_touch_move( sid, time, x, y ):
+    recognizers.touch_move( sid, time, x, y )
+
+def handle_touch_end( sid, time ):
+    recognizers.touch_end( sid, time )
 
 
 
