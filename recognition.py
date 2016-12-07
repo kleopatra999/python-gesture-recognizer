@@ -34,7 +34,8 @@ class Recognizers:
     def __init__( self ):
         self.touches = {}
         self.recognizers = [
-            SingleFingerTap()
+            SingleFingerTap(),
+            SingleFingerDrag()
         ]
 
     def touch_start( self, sid, time, x, y ):
@@ -90,8 +91,11 @@ class Recognizer:
             self.state = "idle"
         self.on_detected()
 
+    def state_end( self ):
+        self.state = "idle"
+
     def on_detected( self ):
-        print( "!!!", type(self).__name__, "detected" )
+        print( "GOOD", type(self).__name__, "detected" )
 
 class SingleFingerTap( Recognizer ):
 
@@ -127,9 +131,35 @@ class SingleFingerTap( Recognizer ):
             self.state_fail()
             print( "!!! SingleFingerTap took too long" )
 
+class SingleFingerDrag( Recognizer ):
 
+    min_distance = 0.02
+    min_distance2 = min_distance*min_distance
+    continous = True
 
+    def __init__( self ):
+        super( SingleFingerDrag, self ).__init__()
 
+    def touch_start( self, event ):
+        touches_n = len( event.touches() )
+        if touches_n == 1:
+            self.state_possible()
+        elif touches_n > 1:
+            self.state_fail()
+
+    def touch_move( self, event ):
+        if self.state == "possible":
+            distance2 = event.touch.distance2_to_start()
+            if distance2 > self.min_distance2:
+                self.state_detect()
+
+    def touch_end( self, event ):
+        if self.state == "possible":
+            self.state_fail()
+            print("!!! SingleFingerDrag not long enough")
+        elif self.state == "running":
+            self.state_end()
+            print( "GOOD SingleFingerDrag end" )
 
 
 
