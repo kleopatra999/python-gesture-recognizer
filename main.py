@@ -79,14 +79,19 @@ def handle_tuio_2Dcur( path, args, typespec, address, bundle_box ):
 import recognition
 recognizers = recognition.Recognizers()
 
+import viwi_gestures_client
+
 def handle_touch_start( sid, time, x, y ):
     recognizers.touch_start( sid, time, x, y )
+    viwi_gestures_client.touch_event( "start", sid, time, x, y )
 
 def handle_touch_move( sid, time, x, y ):
     recognizers.touch_move( sid, time, x, y )
+    viwi_gestures_client.touch_event( "move", sid, time, x, y )
 
 def handle_touch_end( sid, time ):
     recognizers.touch_end( sid, time )
+    viwi_gestures_client.touch_event( "end", sid, time, 0, 0 )
 
 
 
