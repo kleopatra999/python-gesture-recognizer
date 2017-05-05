@@ -7,6 +7,8 @@ def touch_event( type_, id_, timestamp, x, y ):
     touch = {
             "clientX": int(x * 600),
             "clientY": int(y * 400),
+            "touchId": int(id_),
+            "name": str(id_)
     }
     
     print( "POST touch", touch )
